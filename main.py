@@ -227,8 +227,12 @@ async def handle_PokePal_group_message(websocket, msg):
         role = str(msg.get("sender", {}).get("role"))
         message_id = str(msg.get("message_id"))
 
+        # 鉴权
+        if user_id not in owner_id:
+            return
+
         if raw_message.startswith("[CQ:reply,id="):
-            match = re.search(r"\[CQ:reply,id=(\d+)\]", raw_message)
+            match = re.search(r"\[CQ:reply,id=(\d+)\].*骚扰", raw_message)
             if match:
                 reply_id = match.group(1)
                 # 对单条消息进行骚扰
