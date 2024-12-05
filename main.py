@@ -2,6 +2,7 @@
 
 import logging
 import os
+import random
 import sys
 import re
 
@@ -204,13 +205,15 @@ def save_function_status(group_id, status):
 
 
 # 对已知消息id的消息戳20个表情
-async def poke_a_message_by_id(websocket, user_id, group_id, message_id):
-    pass
+async def poke_a_message_by_id(websocket, message_id):
+    for _ in range(20):
+        emoji_id = random.choice(emoji_list)
+        await set_msg_emoji_like(websocket, message_id, emoji_id)
 
 
 # 对单条消息进行骚扰
-async def poke_a_message(websocket, user_id, group_id, message_id, reply_id):
-    pass
+async def poke_a_message(websocket, reply_id):
+    await poke_a_message_by_id(websocket, reply_id)
 
 
 # 群消息处理函数
@@ -229,7 +232,7 @@ async def handle_PokePal_group_message(websocket, msg):
             if match:
                 reply_id = match.group(1)
                 # 对单条消息进行骚扰
-                await poke_a_message(websocket, user_id, group_id, message_id, reply_id)
+                await poke_a_message(websocket, reply_id)
 
     except Exception as e:
         logging.error(f"处理PokePal群消息失败: {e}")
