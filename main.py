@@ -228,8 +228,8 @@ async def handle_PokePal_group_message(websocket, msg):
         message_id = str(msg.get("message_id"))
 
         # 鉴权
-        if user_id not in owner_id:
-            return
+        # if user_id not in owner_id:
+        #     return
 
         if raw_message.startswith("[CQ:reply,id="):
             match = re.search(r"\[CQ:reply,id=(\d+)\].*骚扰", raw_message)
@@ -242,18 +242,3 @@ async def handle_PokePal_group_message(websocket, msg):
         logging.error(f"处理PokePal群消息失败: {e}")
         return
 
-
-# 群通知处理函数
-async def handle_PokePal_group_notice(websocket, msg):
-    # 确保数据目录存在
-    os.makedirs(DATA_DIR, exist_ok=True)
-    try:
-        user_id = str(msg.get("user_id"))
-        group_id = str(msg.get("group_id"))
-        raw_message = str(msg.get("raw_message"))
-        role = str(msg.get("sender", {}).get("role"))
-        message_id = str(msg.get("message_id"))
-
-    except Exception as e:
-        logging.error(f"处理PokePal群通知失败: {e}")
-        return
