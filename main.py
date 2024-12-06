@@ -5,6 +5,7 @@ import os
 import random
 import sys
 import re
+import asyncio
 
 # 添加项目根目录到sys.path
 sys.path.append(
@@ -204,16 +205,20 @@ def save_function_status(group_id, status):
     save_switch(group_id, "PokePal", status)
 
 
+# 对已知消息id的消息戳1个表情戳指定次数
+async def poke_a_message_by_id(websocket, message_id, count):
+    emoji_id = random.choice(emoji_list)
+    for _ in range(count):
+        await set_msg_emoji_like(websocket, message_id, emoji_id, set=True)
+        await asyncio.sleep(0.1)
+        await set_msg_emoji_like(websocket, message_id, emoji_id, set=False)
+
+
 # 对已知消息id的消息戳20个表情
-async def poke_a_message_by_id(websocket, message_id):
+async def poke_a_message_by_id_20(websocket, message_id):
     for _ in range(20):
         emoji_id = random.choice(emoji_list)
         await set_msg_emoji_like(websocket, message_id, emoji_id)
-
-
-# 对单条消息进行骚扰
-async def poke_a_message(websocket, reply_id):
-    await poke_a_message_by_id(websocket, reply_id)
 
 
 # 群消息处理函数
@@ -233,12 +238,19 @@ async def handle_PokePal_group_message(websocket, msg):
 
         if raw_message.startswith("[CQ:reply,id="):
             match = re.search(r"\[CQ:reply,id=(\d+)\].*骚扰", raw_message)
-            if match:
+            match_with_count = re.search(
+                r"\[CQ:reply,id=(\d+)\].*骚扰(\d+)", raw_message
+            )
+            if match_with_count:
+                reply_id = match_with_count.group(1)
+                count = match_with_count.group(2)
+                # 对单条消息进行骚扰
+                await poke_a_message_by_id(websocket, reply_id, int(count))
+            elif match:
                 reply_id = match.group(1)
                 # 对单条消息进行骚扰
-                await poke_a_message(websocket, reply_id)
+                await poke_a_message_by_id_20(websocket, reply_id)
 
     except Exception as e:
         logging.error(f"处理PokePal群消息失败: {e}")
         return
-
