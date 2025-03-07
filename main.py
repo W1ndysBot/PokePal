@@ -232,9 +232,10 @@ async def handle_PokePal_group_message(websocket, msg):
         role = str(msg.get("sender", {}).get("role"))
         message_id = str(msg.get("message_id"))
 
-        # 鉴权
-        # if user_id not in owner_id:
-        #     return
+        # 判断用户权限
+        is_admin = role == "admin"
+        is_owner = role == "owner"
+        is_authorized = (is_admin or is_owner) or (user_id in owner_id)
 
         if raw_message.startswith("[CQ:reply,id="):
             match = re.search(r"\[CQ:reply,id=(\d+)\].*骚扰", raw_message)
@@ -244,8 +245,16 @@ async def handle_PokePal_group_message(websocket, msg):
             if match_with_count:
                 reply_id = match_with_count.group(1)
                 count = match_with_count.group(2)
-                # 对单条消息进行骚扰
-                await poke_a_message_by_id(websocket, reply_id, int(count))
+                # 只有管理员才能使用指定次数的骚扰功能
+                if is_authorized:
+                    # 对单条消息进行骚扰
+                    await poke_a_message_by_id(websocket, reply_id, int(count))
+                else:
+                    await send_group_msg(
+                        websocket,
+                        group_id,
+                        f"[CQ:reply,id={message_id}]只有管理员才能使用指定次数的骚扰功能",
+                    )
             elif match:
                 reply_id = match.group(1)
                 # 对单条消息进行骚扰
